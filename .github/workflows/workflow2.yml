@@ -1,0 +1,57 @@
+name: This is second workflow
+on: [workflow_dispatch]
+  #- push
+   
+jobs:
+ 
+ my_second_job:
+            
+            runs-on: ubuntu-latest
+            steps:
+              - name: Checkout code
+                uses: actions/checkout@v3            
+              
+              - name: Cache node modules
+                id: cache-npm
+                uses: actions/cache@v3
+                with: 
+                 path: ~/.npm
+                 key: cachemodule-${{ hashFiles('**/package.-lock.json') }}  
+              
+              - name: Setup Node.js
+                uses: actions/setup-node@v2
+                with: 
+                      node-version: 14
+              - name: Install Dependencies
+                run: npm install 
+              - name: Run NPM
+                run: npm start 
+      
+              - name: Build the app
+                run: npm run build
+     
+              - run: echo "Build Successful"
+              - name: Upload artifact 
+                uses: actions/upload-artifact@v3
+                with:
+                    name: final-build
+                    path: |
+                        artifacts/
+                        package.json  
+                        path/output/bin/
+                    retention-days: 90
+     
+   
+              - name: Login into Dockerhub1
+                env:
+                     DOCKER_USER: ${{secrets.DOCKERHUB_USERNAME}}
+                     DOCKER_PASS: ${{secrets.DOCKERHUB_TOKEN }}
+                run: | 
+                      docker login -u $DOCKER_USER -p $DOCKER_PASS 
+              
+              - name: Build the Docker image
+                run: docker build -t ${{secrets.DOCKERHUB_USERNAME}}/new  -f  Dockerfile . 
+                   # working-directory: artifacts
+           
+              - name: Push the Docker Image
+                run: docker push ${{secrets.DOCKERHUB_USERNAME}}/new
