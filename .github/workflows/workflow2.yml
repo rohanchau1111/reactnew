@@ -11,37 +11,28 @@ jobs:
               - name: Checkout code
                 uses: actions/checkout@v3            
               
-              - name: Cache node modules
-                id: cache-npm
-                uses: actions/cache@v3
-                with: 
-                 path: ~/.npm
-                 key: cachemodule-${{ hashFiles('**/package.-lock.json') }}  
+              - name: npm install, build, and test
+                run: |
+                  npm ci
+                  npm run build --if-present
+                  npm start & npx wait-on http://localhost:3000
+                env:
+                  CI: true
               
-              - name: Setup Node.js
-                uses: actions/setup-node@v2
-                with: 
-                      node-version: 14
-              - name: Install Dependencies
-                run: npm install 
-              - name: Run NPM
-                run: npm start 
+              # - name: Setup Node.js
+              #   uses: actions/setup-node@v2
+              #   with: 
+              #         node-version: 14
+              # - name: Install Dependencies
+              #   run: npm install 
+              # - name: Run NPM
+              #   run: npm start 
       
-              - name: Build the app
-                run: npm run build
+              # - name: Build the app
+              #   run: npm run build
      
-              - run: echo "Build Successful"
-              - name: Upload artifact 
-                uses: actions/upload-artifact@v3
-                with:
-                    name: final-build
-                    path: |
-                        artifacts/
-                        package.json  
-                        path/output/bin/
-                    retention-days: 90
-     
-   
+              # - run: echo "Build Successful"
+            
               - name: Login into Dockerhub1
                 env:
                      DOCKER_USER: ${{secrets.DOCKERHUB_USERNAME}}
